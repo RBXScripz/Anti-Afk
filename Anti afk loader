@@ -1,0 +1,183 @@
+-- Create the GUI
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local ScreenGui = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local HeaderLabel = Instance.new("TextLabel")  -- Header for "Rbx Scripz"
+local StopwatchLabel = Instance.new("TextLabel")
+local FastModeButton = Instance.new("TextButton")
+local MinusButton = Instance.new("TextButton")
+local PlusButton = Instance.new("TextButton")
+local FastMode = false
+local isGuiVisible = true
+
+-- GUI properties
+ScreenGui.Parent = playerGui
+ScreenGui.Name = "Rbx Scripz Gui"  -- GUI name
+
+Frame.Parent = ScreenGui
+Frame.Size = UDim2.new(0, 300, 0, 120)  -- Increased height to fit header
+Frame.Position = UDim2.new(0.5, -150, 0.5, -60)
+Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Frame.BackgroundTransparency = 0.5
+Frame.AnchorPoint = Vector2.new(0.5, 0.5)
+
+-- Header Label for "Rbx Scripz"
+HeaderLabel.Parent = Frame
+HeaderLabel.Size = UDim2.new(1, 0, 0.2, 0)
+HeaderLabel.Position = UDim2.new(0, 0, 0, 0)
+HeaderLabel.Text = "Rbx Scripz"
+HeaderLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+HeaderLabel.TextSize = 22
+HeaderLabel.TextScaled = true
+HeaderLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+HeaderLabel.BackgroundTransparency = 0.7
+
+-- Stopwatch Label
+StopwatchLabel.Parent = Frame
+StopwatchLabel.Size = UDim2.new(1, 0, 0.5, 0)
+StopwatchLabel.Position = UDim2.new(0, 0, 0.2, 0)
+StopwatchLabel.Text = "AFK Time: 0:00"
+StopwatchLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+StopwatchLabel.TextSize = 24
+StopwatchLabel.TextScaled = true
+
+-- Fast Mode Button
+FastModeButton.Parent = Frame
+FastModeButton.Size = UDim2.new(0.6, 0, 0.3, 0)
+FastModeButton.Position = UDim2.new(0.4, 0, 0.7, 0)
+FastModeButton.Text = "Fast Mode: Off"
+FastModeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+FastModeButton.TextSize = 20
+FastModeButton.TextScaled = true
+
+-- Minus Button
+MinusButton.Parent = Frame
+MinusButton.Size = UDim2.new(0.2, 0, 0.2, 0)
+MinusButton.Position = UDim2.new(0, -30, 0, -30)
+MinusButton.Text = "-"
+MinusButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+MinusButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinusButton.TextSize = 30
+MinusButton.TextScaled = true
+
+-- Plus Button
+PlusButton.Parent = ScreenGui
+PlusButton.Size = UDim2.new(0.15, 0, 0.15, 0)
+PlusButton.Position = UDim2.new(0.05, 0, 0.5, -30) -- Positioned in the middle left
+PlusButton.Text = "+"
+PlusButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+PlusButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+PlusButton.TextSize = 30
+PlusButton.TextScaled = true
+PlusButton.Visible = false -- Initially hidden
+
+-- Stopwatch timer
+local startTime = tick()
+
+-- Update the stopwatch every second
+game:GetService("RunService").Heartbeat:Connect(function()
+    local timeElapsed = tick() - startTime
+    local minutes = math.floor(timeElapsed / 60)
+    local seconds = math.floor(timeElapsed % 60)
+    StopwatchLabel.Text = string.format("AFK Time: %02d:%02d", minutes, seconds)
+end)
+
+-- Fast Mode toggle
+FastModeButton.MouseButton1Click:Connect(function()
+    FastMode = not FastMode
+    if FastMode then
+        FastModeButton.Text = "Fast Mode: On"
+        -- Disable materials or other intensive elements for better performance
+        game.Lighting.GlobalShadows = false
+        game.Lighting.Ambient = Color3.fromRGB(128, 128, 128)
+        -- Adjust other settings to enhance performance, like disabling some materials, etc.
+        game.Workspace.Terrain.Materials = Enum.Material.SmoothPlastic
+    else
+        FastModeButton.Text = "Fast Mode: Off"
+        -- Restore the settings to normal
+        game.Lighting.GlobalShadows = true
+        game.Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+        -- Restore other settings to normal
+        game.Workspace.Terrain.Materials = Enum.Material.Plastic
+    end
+end)
+
+-- Make the GUI draggable
+local dragging = false
+local dragInput, dragStart, startPos
+
+Frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = Frame.Position
+    end
+end)
+
+Frame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if dragging then
+        local delta = input.Position - dragStart
+        Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- Hide GUI animation and show the plus button
+MinusButton.MouseButton1Click:Connect(function()
+    if isGuiVisible then
+        isGuiVisible = false
+        -- Animate the GUI to hide
+        Frame:TweenPosition(UDim2.new(0.5, -150, 0.5, 200), "Out", "Quad", 0.5, true)
+        MinusButton:TweenPosition(UDim2.new(0, -30, 0, -30), "Out", "Quad", 0.5, true)
+        -- Show the plus button
+        PlusButton.Visible = true
+        -- Hide the minus button
+        MinusButton.Visible = false
+    end
+end)
+
+-- Show GUI animation and hide the plus button
+PlusButton.MouseButton1Click:Connect(function()
+    if not isGuiVisible then
+        isGuiVisible = true
+        -- Animate the GUI to appear
+        Frame:TweenPosition(UDim2.new(0.5, -150, 0.5, -50), "Out", "Quad", 0.5, true)
+        -- Show the minus button
+        MinusButton.Visible = true
+        -- Hide the plus button
+        PlusButton.Visible = false
+    end
+end)
+
+-- Simulate player activity to prevent AFK kick every 5 minutes and random intervals
+local function simulateMouseMovement()
+    local playerMouse = player:GetMouse()
+
+    -- Randomize a mouse position within the screen bounds
+    local screenWidth = game.Workspace.CurrentCamera.ViewportSize.X
+    local screenHeight = game.Workspace.CurrentCamera.ViewportSize.Y
+
+    local randomX = math.random(0, screenWidth)
+    local randomY = math.random(0, screenHeight)
+
+    -- Simulate mouse movement by updating its position (using Hit property)
+    local ray = game.Workspace.CurrentCamera:ScreenPointToRay(randomX, randomY)
+    playerMouse.Hit = ray.Origin
+end
+
+-- Prevent AFK kick by simulating activity every 5 minutes and random intervals
+while true do
+    wait(300)  -- Wait for 5 minutes (300 seconds)
+    
+    -- Simulate mouse movement to keep the player active
+    simulateMouseMovement()
+
+    -- Wait for a random time between activity to simulate realistic behavior
+    wait(math.random(30, 90))  -- Random delay between activities to avoid too predictable behavior
+end
